@@ -1,0 +1,23 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { SetupForm } from "@/features/auth/components/setup-form";
+import { needsInitialSetup } from "@/features/auth/lib/bootstrap";
+
+export const metadata: Metadata = { title: "Configuração inicial | Peres Tarefas" };
+
+export default async function InitialSetupPage() {
+  if (!(await needsInitialSetup())) redirect("/login");
+
+  return (
+    <main className="flex flex-1 items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface p-8 shadow-sm">
+        <h1 className="text-xl font-semibold">Bem-vindo ao Peres Tarefas</h1>
+        <p className="mb-6 mt-1 text-sm text-muted">
+          Este é o primeiro acesso. Cadastre a pessoa que vai gerenciar o sistema. Depois você
+          poderá cadastrar o restante da equipe.
+        </p>
+        <SetupForm />
+      </div>
+    </main>
+  );
+}
