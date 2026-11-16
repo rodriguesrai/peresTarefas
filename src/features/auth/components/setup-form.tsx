@@ -6,11 +6,12 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { createFirstManager, type SetupState } from "../setup-actions";
 
-export function SetupForm() {
+export function SetupForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState<SetupState, FormData>(createFirstManager, {});
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="token" value={token} />
       <Field label="Seu nome" htmlFor="name" error={state.errors?.name?.[0]}>
         <Input id="name" name="name" defaultValue={state.values?.name} autoFocus required />
       </Field>
@@ -23,6 +24,11 @@ export function SetupForm() {
       <Field label="Repita a senha" htmlFor="confirm" error={state.errors?.confirm?.[0]}>
         <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
       </Field>
+      {state.message && (
+        <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
+          {state.message}
+        </p>
+      )}
       <Button type="submit" disabled={pending}>
         {pending ? "Salvando..." : "Começar a usar"}
       </Button>

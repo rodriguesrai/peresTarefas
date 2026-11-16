@@ -5,6 +5,7 @@ import * as z from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "./lib/password";
 import { createSession } from "./lib/session";
+import { deleteSetupToken, isValidSetupToken } from "./lib/setup-token";
 import { EmailSchema, NameSchema, PasswordSchema } from "./schemas";
 
 const SetupSchema = z
@@ -22,9 +23,15 @@ const SetupSchema = z
 export type SetupState = {
   errors?: Partial<Record<"name" | "email" | "password" | "confirm", string[]>>;
   values?: { name?: string; email?: string };
+  message?: string;
 };
 
 export async function createFirstManager(_state: SetupState, formData: FormData): Promise<SetupState> {
+  // A action pode ser chamada direto, sem passar pela página: confere o token aqui.
+  if (!isValidSetupToken(formData.get("token"))) {
+    return { message: "Link de configuração inválido. Abra o sistema pelo arquivo Iniciar Peres Tarefas." };
+  }
+
   const values = { name: String(formData.get("name") ?? ""), email: String(formData.get("email") ?? "") };
   const parsed = SetupSchema.safeParse({
     ...values,
@@ -50,6 +57,7 @@ export async function createFirstManager(_state: SetupState, formData: FormData)
   });
 
   if (!user) redirect("/login");
+  deleteSetupToken();
 
   await createSession({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion });
   redirect("/");
