@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import * as z from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "./lib/password";
+import { clearLoginFailures, isLoginBlocked, registerLoginFailure } from "./lib/rate-limit";
 import { createSession, deleteSession } from "./lib/session";
 
 const LoginSchema = z.object({
@@ -29,14 +30,21 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
   }
 
   const { email, password } = parsed.data;
+  if (isLoginBlocked(email)) {
+    return { message: "Muitas tentativas. Aguarde 15 minutos e tente de novo.", email };
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
   // Sempre calcula o hash, para o tempo de resposta não revelar se o e-mail existe.
   const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
 
   // Mesma mensagem para e-mail inexistente e senha errada.
   if (!user || !valid || !user.active) {
+    registerLoginFailure(email);
     return { message: "E-mail ou senha incorretos.", email };
   }
+
+  clearLoginFailures(email);
 
   await createSession({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion });
   redirect(user.mustChangePassword ? "/alterar-senha" : "/");
