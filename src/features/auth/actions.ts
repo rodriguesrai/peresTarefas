@@ -11,6 +11,8 @@ const LoginSchema = z.object({
   password: z.string().min(1, { error: "Informe a senha." }),
 });
 
+const DUMMY_HASH = ["scrypt", "0".repeat(32), "0".repeat(128)].join("$");
+
 export type LoginState = {
   errors?: { email?: string[]; password?: string[] };
   message?: string;
@@ -28,7 +30,8 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
 
   const { email, password } = parsed.data;
   const user = await prisma.user.findUnique({ where: { email } });
-  const valid = user ? await verifyPassword(password, user.passwordHash) : false;
+  // Sempre calcula o hash, para o tempo de resposta não revelar se o e-mail existe.
+  const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
 
   // Mesma mensagem para e-mail inexistente e senha errada.
   if (!user || !valid || !user.active) {
