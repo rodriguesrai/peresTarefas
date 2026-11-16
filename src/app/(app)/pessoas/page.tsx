@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { requireGestor } from "@/features/auth/lib/dal";
 import { listPeople } from "@/features/people/lib/queries";
@@ -11,9 +12,17 @@ export default async function PeoplePage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold">Pessoas</h1>
-        <p className="mt-1 text-sm text-muted">Equipe do escritório e quem tem acesso ao sistema.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Pessoas</h1>
+          <p className="mt-1 text-sm text-muted">Equipe do escritório e quem tem acesso ao sistema.</p>
+        </div>
+        <Link
+          href="/pessoas/nova"
+          className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90"
+        >
+          Nova pessoa
+        </Link>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border bg-surface">
