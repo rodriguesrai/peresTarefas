@@ -17,11 +17,19 @@ export async function hashPassword(password: string): Promise<string> {
   return ["scrypt", salt.toString("hex"), hash.toString("hex")].join("$");
 }
 
-export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  const [algorithm, saltHex, hashHex] = stored.split("$");
-  if (algorithm !== "scrypt" || !saltHex || !hashHex) return false;
+const STORED_FORMAT = /^scrypt\$([0-9a-f]{32})\$([0-9a-f]{128})$/;
 
-  const expected = Buffer.from(hashHex, "hex");
-  const actual = await scryptAsync(password, Buffer.from(saltHex, "hex"), expected.length);
-  return timingSafeEqual(expected, actual);
+export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  // Registro fora do formato esperado nunca é aceito.
+  const match = STORED_FORMAT.exec(stored);
+  if (!match) return false;
+
+  try {
+    const salt = Buffer.from(match[1], "hex");
+    const expected = Buffer.from(match[2], "hex");
+    const actual = await scryptAsync(password, salt, KEY_LENGTH);
+    return timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
 }
