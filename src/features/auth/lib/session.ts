@@ -22,20 +22,27 @@ let cachedKey: Uint8Array | null = null;
 function getSecretKey(): Uint8Array {
   if (cachedKey) return cachedKey;
 
-  let secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    const file = path.join(DATA_DIR, "session-secret");
-    if (fs.existsSync(file)) {
-      secret = fs.readFileSync(file, "utf8").trim();
-    } else {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-      secret = randomBytes(32).toString("hex");
-      fs.writeFileSync(file, secret, { mode: 0o600 });
-    }
+  const secret = process.env.SESSION_SECRET ?? readOrCreateSecretFile();
+  if (Buffer.byteLength(secret) < 32) {
+    throw new Error("SESSION_SECRET precisa ter pelo menos 32 caracteres.");
   }
 
   cachedKey = new TextEncoder().encode(secret);
   return cachedKey;
+}
+
+function readOrCreateSecretFile(): string {
+  const file = path.join(DATA_DIR, "session-secret");
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    // "wx" falha se o arquivo já existir, evitando sobrescrever um segredo em uso.
+    const secret = randomBytes(32).toString("hex");
+    fs.writeFileSync(file, secret, { mode: 0o600, flag: "wx" });
+    return secret;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    return fs.readFileSync(file, "utf8").trim();
+  }
 }
 
 async function encrypt(payload: SessionPayload, expiresAt: Date) {
@@ -63,8 +70,9 @@ export async function createSession(payload: SessionPayload) {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    // O sistema roda em http:// na rede local; com "secure" o cookie não seria enviado.
-    secure: false,
+    // Por padrão o sistema roda em http:// na rede local, onde um cookie "secure"
+    // não seria enviado. Quem publicar com HTTPS deve definir COOKIE_SECURE=1.
+    secure: process.env.COOKIE_SECURE === "1",
     sameSite: "lax",
     expires: expiresAt,
     path: "/",
