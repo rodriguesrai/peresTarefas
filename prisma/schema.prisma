@@ -24,4 +24,42 @@ model User {
   mustChangePassword Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+}
+
+enum TaskStatus {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+enum TaskPriority {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+// Tarefa atribuída a uma pessoa. "Atrasada" é calculado:
+// prazo vencido e status diferente de CONCLUIDA.
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus   @default(PENDENTE)
+  priority    TaskPriority @default(MEDIA)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assigneeId  String
+  assignee    User   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById String
+  createdBy   User   @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@index([assigneeId, status])
+  @@index([dueDate])
 }
