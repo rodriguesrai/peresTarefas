@@ -14,10 +14,11 @@ function sweep(now: number) {
   for (const [key, entry] of entries) {
     if (now - entry.firstAttemptAt > WINDOW_MS) entries.delete(key);
   }
-  // Ainda cheio: descarta as entradas mais antigas (o Map mantém a ordem de inserção).
-  for (const key of entries.keys()) {
+  // Ainda cheio: descarta só quem não está bloqueado, para que encher o
+  // contador com e-mails falsos não apague o bloqueio de uma conta atacada.
+  for (const [key, entry] of entries) {
     if (entries.size < MAX_ENTRIES) break;
-    entries.delete(key);
+    if (entry.attempts < MAX_ATTEMPTS) entries.delete(key);
   }
 }
 
@@ -31,6 +32,8 @@ export function reserveLoginAttempt(key: string, now = Date.now()): boolean {
   }
   if (!entry) {
     if (entries.size >= MAX_ENTRIES) sweep(now);
+    // Só com mil contas bloqueadas ao mesmo tempo: recusa até a janela expirar.
+    if (entries.size >= MAX_ENTRIES) return false;
     entry = { attempts: 0, firstAttemptAt: now };
     entries.set(key, entry);
   }
