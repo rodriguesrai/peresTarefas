@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireGestor } from "@/features/auth/lib/dal";
 import { EditPersonForm } from "@/features/people/components/edit-person-form";
+import { PersonStatusToggle } from "@/features/people/components/person-status-toggle";
 import { getPerson } from "@/features/people/lib/queries";
 
 export const metadata: Metadata = { title: "Editar pessoa | Peres Tarefas" };
@@ -32,6 +33,10 @@ export default async function EditPersonPage({ params }: PageProps<"/pessoas/[id
           }}
         />
       </div>
+      <section className="rounded-lg border border-border bg-surface p-6">
+        <h2 className="mb-2 font-medium">Acesso</h2>
+        <PersonStatusToggle id={person.id} active={person.active} />
+      </section>
     </div>
   );
 }

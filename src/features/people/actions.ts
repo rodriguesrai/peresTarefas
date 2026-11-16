@@ -78,3 +78,28 @@ export async function updatePerson(
   revalidatePath("/pessoas");
   return { saved: true, values };
 }
+
+export type PersonActionState = { message?: string; ok?: string };
+
+// Desativar mantém o histórico de tarefas e bloqueia o login na hora.
+export async function setPersonActive(id: string, active: boolean): Promise<PersonActionState> {
+  const me = await requireGestor();
+  if (id === me.id && !active) return { message: "Você não pode desativar o seu próprio acesso." };
+
+  const person = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  if (!person) return { message: "Pessoa não encontrada." };
+
+  if (!active && person.role === "GESTOR") {
+    const otherManagers = await prisma.user.count({ where: { role: "GESTOR", active: true, id: { not: id } } });
+    if (otherManagers === 0) return { message: "É preciso manter pelo menos um gestor ativo." };
+  }
+
+  await prisma.user.update({
+    where: { id },
+    data: { active, ...(active ? {} : { sessionVersion: { increment: 1 } }) },
+  });
+
+  revalidatePath("/pessoas");
+  revalidatePath(`/pessoas/${id}`);
+  return { ok: active ? "Acesso reativado." : "Acesso desativado." };
+}
