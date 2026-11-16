@@ -28,3 +28,10 @@ export async function listPeople(): Promise<PersonListItem[]> {
 
   return people.map(({ _count, ...person }) => ({ ...person, openTasks: _count.assignedTasks }));
 }
+
+export async function getPerson(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, email: true, position: true, role: true, active: true },
+  });
+}

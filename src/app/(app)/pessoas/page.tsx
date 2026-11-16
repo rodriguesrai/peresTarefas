@@ -40,7 +40,9 @@ export default async function PeoplePage() {
             {people.map((person) => (
               <tr key={person.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">
-                  <div className="font-medium">{person.name}</div>
+                  <Link href={`/pessoas/${person.id}`} className="font-medium hover:text-primary hover:underline">
+                    {person.name}
+                  </Link>
                   <div className="text-muted">{person.email}</div>
                 </td>
                 <td className="px-4 py-3">{person.position ?? <span className="text-muted">—</span>}</td>

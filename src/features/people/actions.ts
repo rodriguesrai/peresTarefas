@@ -36,3 +36,45 @@ export async function createPerson(_state: CreatePersonState, formData: FormData
   revalidatePath("/pessoas");
   return { created: { name: parsed.data.name, email: parsed.data.email, temporaryPassword } };
 }
+
+export type UpdatePersonState = {
+  errors?: Partial<Record<PersonFields, string[]>>;
+  values?: PersonFormValues;
+  message?: string;
+  saved?: boolean;
+};
+
+export async function updatePerson(
+  id: string,
+  _state: UpdatePersonState,
+  formData: FormData,
+): Promise<UpdatePersonState> {
+  const me = await requireGestor();
+
+  const values = readPersonForm(formData);
+  const parsed = PersonSchema.safeParse(values);
+  if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
+
+  const person = await prisma.user.findUnique({ where: { id }, select: { id: true, role: true } });
+  if (!person) return { message: "Pessoa não encontrada.", values };
+
+  if (id === me.id && parsed.data.role !== "GESTOR") {
+    return { message: "Você não pode tirar o seu próprio perfil de gestor.", values };
+  }
+
+  const sameEmail = await prisma.user.findFirst({
+    where: { email: parsed.data.email, id: { not: id } },
+    select: { id: true },
+  });
+  if (sameEmail) return { errors: { email: ["Já existe uma pessoa com este e-mail."] }, values };
+
+  // Mudança de perfil derruba a sessão atual, que carrega o perfil antigo.
+  const roleChanged = person.role !== parsed.data.role;
+  await prisma.user.update({
+    where: { id },
+    data: { ...parsed.data, ...(roleChanged ? { sessionVersion: { increment: 1 } } : {}) },
+  });
+
+  revalidatePath("/pessoas");
+  return { saved: true, values };
+}
