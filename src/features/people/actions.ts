@@ -8,6 +8,20 @@ import { hashPassword } from "@/features/auth/lib/password";
 import { generateTemporaryPassword } from "@/features/auth/lib/temporary-password";
 import { PersonSchema, readPersonForm, type PersonFields, type PersonFormValues } from "./schemas";
 
+const LAST_MANAGER = "É preciso manter pelo menos um gestor ativo.";
+
+class LastManagerError extends Error {}
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+// Conferido depois da escrita, dentro da transação: se ninguém sobrou
+// como gestor ativo, a transação é desfeita.
+async function assertActiveManagerRemains(tx: Tx) {
+  if ((await tx.user.count({ where: { role: "GESTOR", active: true } })) === 0) {
+    throw new LastManagerError();
+  }
+}
+
 export type CreatePersonState = {
   errors?: Partial<Record<PersonFields, string[]>>;
   values?: PersonFormValues;
@@ -70,10 +84,18 @@ export async function updatePerson(
 
   // Mudança de perfil derruba a sessão atual, que carrega o perfil antigo.
   const roleChanged = person.role !== parsed.data.role;
-  await prisma.user.update({
-    where: { id },
-    data: { ...parsed.data, ...(roleChanged ? { sessionVersion: { increment: 1 } } : {}) },
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { ...parsed.data, ...(roleChanged ? { sessionVersion: { increment: 1 } } : {}) },
+      });
+      await assertActiveManagerRemains(tx);
+    });
+  } catch (error) {
+    if (error instanceof LastManagerError) return { message: LAST_MANAGER, values };
+    throw error;
+  }
 
   revalidatePath("/pessoas");
   return { saved: true, values };
@@ -86,18 +108,21 @@ export async function setPersonActive(id: string, active: boolean): Promise<Pers
   const me = await requireGestor();
   if (id === me.id && !active) return { message: "Você não pode desativar o seu próprio acesso." };
 
-  const person = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+  const person = await prisma.user.findUnique({ where: { id }, select: { id: true } });
   if (!person) return { message: "Pessoa não encontrada." };
 
-  if (!active && person.role === "GESTOR") {
-    const otherManagers = await prisma.user.count({ where: { role: "GESTOR", active: true, id: { not: id } } });
-    if (otherManagers === 0) return { message: "É preciso manter pelo menos um gestor ativo." };
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { active, ...(active ? {} : { sessionVersion: { increment: 1 } }) },
+      });
+      await assertActiveManagerRemains(tx);
+    });
+  } catch (error) {
+    if (error instanceof LastManagerError) return { message: LAST_MANAGER };
+    throw error;
   }
-
-  await prisma.user.update({
-    where: { id },
-    data: { active, ...(active ? {} : { sessionVersion: { increment: 1 } }) },
-  });
 
   revalidatePath("/pessoas");
   revalidatePath(`/pessoas/${id}`);
