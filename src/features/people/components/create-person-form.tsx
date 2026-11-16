@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createPerson, type CreatePersonState } from "../actions";
 import { PersonFields } from "./person-fields";
 import { TemporaryPasswordNotice } from "./temporary-password-notice";
 
+// A chave remonta o formulário, zerando o estado para cadastrar outra pessoa.
 export function CreatePersonForm() {
+  const [formKey, setFormKey] = useState(0);
+  return <CreatePersonFormInner key={formKey} onAnother={() => setFormKey((key) => key + 1)} />;
+}
+
+function CreatePersonFormInner({ onAnother }: { onAnother: () => void }) {
   const [state, action, pending] = useActionState<CreatePersonState, FormData>(createPerson, {});
 
   if (state.created) {
@@ -22,9 +28,9 @@ export function CreatePersonForm() {
           <Link href="/pessoas" className="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
             Voltar para a lista
           </Link>
-          <a href="/pessoas/nova" className="inline-flex h-10 items-center rounded-md border border-border px-4 text-sm font-medium">
+          <Button type="button" variant="secondary" onClick={onAnother}>
             Cadastrar outra pessoa
-          </a>
+          </Button>
         </div>
       </div>
     );
