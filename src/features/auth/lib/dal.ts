@@ -41,9 +41,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   };
 });
 
-export async function requireUser(): Promise<CurrentUser> {
+// Toda página protegida passa por aqui. Quem precisa trocar a senha
+// é levado para /alterar-senha antes de usar qualquer outra tela.
+export async function requireUser(options: { allowPendingPasswordChange?: boolean } = {}): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.mustChangePassword && !options.allowPendingPasswordChange) redirect("/alterar-senha");
   return user;
 }
 
