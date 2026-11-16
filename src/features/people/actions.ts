@@ -103,3 +103,26 @@ export async function setPersonActive(id: string, active: boolean): Promise<Pers
   revalidatePath(`/pessoas/${id}`);
   return { ok: active ? "Acesso reativado." : "Acesso desativado." };
 }
+
+export type ResetPasswordState = { message?: string; temporaryPassword?: string };
+
+// Para quem esqueceu a senha: gera uma provisória e encerra as sessões abertas.
+export async function resetPersonPassword(id: string): Promise<ResetPasswordState> {
+  const me = await requireGestor();
+  if (id === me.id) return { message: "Para a sua própria senha, use \"Alterar senha\" no topo da tela." };
+
+  const person = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+  if (!person) return { message: "Pessoa não encontrada." };
+
+  const temporaryPassword = generateTemporaryPassword();
+  await prisma.user.update({
+    where: { id },
+    data: {
+      passwordHash: await hashPassword(temporaryPassword),
+      mustChangePassword: true,
+      sessionVersion: { increment: 1 },
+    },
+  });
+
+  return { temporaryPassword };
+}

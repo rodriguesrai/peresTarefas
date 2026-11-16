@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireGestor } from "@/features/auth/lib/dal";
 import { EditPersonForm } from "@/features/people/components/edit-person-form";
+import { ResetPasswordButton } from "@/features/people/components/reset-password-button";
 import { PersonStatusToggle } from "@/features/people/components/person-status-toggle";
 import { getPerson } from "@/features/people/lib/queries";
 
@@ -36,6 +37,10 @@ export default async function EditPersonPage({ params }: PageProps<"/pessoas/[id
       <section className="rounded-lg border border-border bg-surface p-6">
         <h2 className="mb-2 font-medium">Acesso</h2>
         <PersonStatusToggle id={person.id} active={person.active} />
+      </section>
+      <section className="rounded-lg border border-border bg-surface p-6">
+        <h2 className="mb-2 font-medium">Senha</h2>
+        <ResetPasswordButton id={person.id} name={person.name} email={person.email} />
       </section>
     </div>
   );
