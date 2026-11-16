@@ -5,14 +5,15 @@ import * as z from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "./lib/dal";
 import { hashPassword, verifyPassword } from "./lib/password";
+import { clearLoginAttempts, reserveLoginAttempt } from "./lib/rate-limit";
 import { createSession } from "./lib/session";
 import { PasswordSchema } from "./schemas";
 
 const ChangePasswordSchema = z
   .object({
-    current: z.string().min(1, { error: "Informe a senha atual." }),
+    current: z.string().min(1, { error: "Informe a senha atual." }).max(128),
     password: PasswordSchema,
-    confirm: z.string(),
+    confirm: z.string().max(128),
   })
   .refine((data) => data.password === data.confirm, {
     error: "As senhas não conferem.",
@@ -40,10 +41,16 @@ export async function changePassword(
   });
   if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors };
 
+  const attemptKey = `troca-senha:${me.id}`;
+  if (!reserveLoginAttempt(attemptKey)) {
+    return { errors: { current: ["Muitas tentativas. Aguarde 15 minutos e tente de novo."] } };
+  }
+
   const user = await prisma.user.findUniqueOrThrow({ where: { id: me.id } });
   if (!(await verifyPassword(parsed.data.current, user.passwordHash))) {
     return { errors: { current: ["Senha atual incorreta."] } };
   }
+  clearLoginAttempts(attemptKey);
 
   // Nova versão de sessão: outros navegadores logados com a senha antiga saem.
   const updated = await prisma.user.update({

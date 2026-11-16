@@ -13,7 +13,7 @@ const SetupSchema = z
     name: NameSchema,
     email: EmailSchema,
     password: PasswordSchema,
-    confirm: z.string(),
+    confirm: z.string().max(128),
   })
   .refine((data) => data.password === data.confirm, {
     error: "As senhas não conferem.",
