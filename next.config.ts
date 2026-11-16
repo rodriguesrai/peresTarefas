@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Todas as telas dependem do usuário logado; renderização dinâmica é suficiente.
   turbopack: {
     rules: {
       "*.css": {
