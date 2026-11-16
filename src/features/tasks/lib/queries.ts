@@ -72,3 +72,17 @@ export async function listAssignablePeople() {
     select: { id: true, name: true },
   });
 }
+
+// Colaborador só enxerga as próprias tarefas; gestor enxerga todas.
+export async function getTaskForUser(id: string, user: { id: string; role: "GESTOR" | "COLABORADOR" }) {
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      assignee: { select: { id: true, name: true } },
+      createdBy: { select: { id: true, name: true } },
+    },
+  });
+  if (!task) return null;
+  if (user.role !== "GESTOR" && task.assigneeId !== user.id) return null;
+  return task;
+}

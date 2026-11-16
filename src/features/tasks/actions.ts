@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireGestor } from "@/features/auth/lib/dal";
+import { requireGestor, requireUser } from "@/features/auth/lib/dal";
+import type { TaskStatus } from "@/generated/prisma/enums";
+import { getTaskForUser } from "./lib/queries";
+import { STATUSES } from "./lib/task-meta";
 import { TaskSchema, readTaskForm, type TaskFields, type TaskFormValues } from "./schemas";
 
 export type TaskFormState = {
@@ -31,4 +34,25 @@ export async function createTask(_state: TaskFormState, formData: FormData): Pro
 
   revalidatePath("/tarefas");
   redirect(`/tarefas/${task.id}`);
+}
+
+export type StatusState = { message?: string };
+
+// Responsável e gestores podem mudar o status.
+export async function changeTaskStatus(id: string, status: TaskStatus): Promise<StatusState> {
+  const me = await requireUser();
+  if (!STATUSES.includes(status)) return { message: "Status inválido." };
+
+  const task = await getTaskForUser(id, me);
+  if (!task) return { message: "Tarefa não encontrada." };
+
+  await prisma.task.update({
+    where: { id },
+    data: { status, completedAt: status === "CONCLUIDA" ? new Date() : null },
+  });
+
+  revalidatePath(`/tarefas/${id}`);
+  revalidatePath("/tarefas");
+  revalidatePath("/");
+  return {};
 }
