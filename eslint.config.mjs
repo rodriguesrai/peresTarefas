@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     ".remember/**",
     "runtime/**",
     "dist/**",
+    "src/generated/**",
   ]),
 ]);
 

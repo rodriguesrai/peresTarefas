@@ -47,3 +47,6 @@ next-env.d.ts
 /dist/
 *.db
 *.db-journal
+
+/src/generated/prisma
+/dados/
