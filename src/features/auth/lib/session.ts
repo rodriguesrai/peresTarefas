@@ -13,6 +13,7 @@ const SESSION_DAYS = 7;
 export type SessionPayload = {
   userId: string;
   role: Role;
+  sessionVersion: number;
 };
 
 let cachedKey: Uint8Array | null = null;
@@ -57,8 +58,11 @@ async function decrypt(token: string | undefined): Promise<SessionPayload | null
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ["HS256"] });
-    if (typeof payload.userId !== "string" || typeof payload.role !== "string") return null;
-    return { userId: payload.userId, role: payload.role as Role };
+    const { userId, role, sessionVersion } = payload;
+    if (typeof userId !== "string" || typeof role !== "string" || typeof sessionVersion !== "number") {
+      return null;
+    }
+    return { userId, role: role as Role, sessionVersion };
   } catch {
     return null;
   }

@@ -19,9 +19,18 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true, role: true, active: true, mustChangePassword: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      active: true,
+      mustChangePassword: true,
+      sessionVersion: true,
+    },
   });
-  if (!user || !user.active) return null;
+  // Sessão de antes de uma troca de senha não vale mais.
+  if (!user || !user.active || user.sessionVersion !== session.sessionVersion) return null;
 
   return {
     id: user.id,

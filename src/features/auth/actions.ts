@@ -35,7 +35,7 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
     return { message: "E-mail ou senha incorretos.", email };
   }
 
-  await createSession({ userId: user.id, role: user.role });
+  await createSession({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion });
   redirect(user.mustChangePassword ? "/alterar-senha" : "/");
 }
 

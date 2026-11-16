@@ -51,6 +51,6 @@ export async function createFirstManager(_state: SetupState, formData: FormData)
 
   if (!user) redirect("/login");
 
-  await createSession({ userId: user.id, role: user.role });
+  await createSession({ userId: user.id, role: user.role, sessionVersion: user.sessionVersion });
   redirect("/");
 }
