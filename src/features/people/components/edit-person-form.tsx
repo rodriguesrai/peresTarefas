@@ -7,12 +7,13 @@ import type { PersonFormValues } from "../schemas";
 import { PersonFields } from "./person-fields";
 
 export function EditPersonForm({ id, initial }: { id: string; initial: PersonFormValues }) {
-  const [state, action, pending] = useActionState<UpdatePersonState, FormData>(updatePerson.bind(null, id), {
+  const [state, action, pending] = useActionState<UpdatePersonState, FormData>(updatePerson, {
     values: initial,
   });
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="id" value={id} />
       <PersonFields values={state.values} errors={state.errors} />
       {state.message && (
         <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">

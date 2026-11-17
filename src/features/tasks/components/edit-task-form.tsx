@@ -16,12 +16,13 @@ export function EditTaskForm({
   initial: TaskFormValues;
   people: { id: string; name: string }[];
 }) {
-  const [state, action, pending] = useActionState<TaskFormState, FormData>(updateTask.bind(null, id), {
+  const [state, action, pending] = useActionState<TaskFormState, FormData>(updateTask, {
     values: initial,
   });
 
   return (
     <form action={action} className="flex flex-col gap-4">
+      <input type="hidden" name="id" value={id} />
       <TaskFields values={state.values} errors={state.errors} people={people} />
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>

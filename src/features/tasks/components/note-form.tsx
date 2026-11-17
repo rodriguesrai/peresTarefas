@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { addTaskNote, type NoteState } from "../actions";
 
 export function NoteForm({ taskId }: { taskId: string }) {
-  const [state, action, pending] = useActionState<NoteState, FormData>(addTaskNote.bind(null, taskId), {});
+  const [state, action, pending] = useActionState<NoteState, FormData>(addTaskNote, {});
   const formRef = useRef<HTMLFormElement>(null);
 
   // Limpa o campo depois de salvar.
@@ -15,6 +15,7 @@ export function NoteForm({ taskId }: { taskId: string }) {
 
   return (
     <form ref={formRef} action={action} className="space-y-2">
+      <input type="hidden" name="taskId" value={taskId} />
       <label htmlFor="content" className="sr-only">
         Nova observação
       </label>

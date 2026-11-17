@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { setPersonActive, type PersonActionState } from "../actions";
 
 export function PersonStatusToggle({ id, active }: { id: string; active: boolean }) {
-  const [state, action, pending] = useActionState<PersonActionState>(setPersonActive.bind(null, id, !active), {});
+  const [state, action, pending] = useActionState<PersonActionState, FormData>(setPersonActive, {});
 
   return (
     <form
@@ -17,6 +17,8 @@ export function PersonStatusToggle({ id, active }: { id: string; active: boolean
       }}
       className="space-y-2"
     >
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="active" value={active ? "0" : "1"} />
       <p className="text-sm text-muted">
         {active
           ? "Pessoa ativa: pode entrar no sistema e receber tarefas."

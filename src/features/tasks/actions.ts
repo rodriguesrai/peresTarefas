@@ -81,8 +81,9 @@ const NoteSchema = z.object({
 export type NoteState = { error?: string; savedAt?: number };
 
 // Responsável e gestores registram observações e atualizações na tarefa.
-export async function addTaskNote(taskId: string, _state: NoteState, formData: FormData): Promise<NoteState> {
+export async function addTaskNote(_state: NoteState, formData: FormData): Promise<NoteState> {
   const me = await requireUser();
+  const taskId = formData.get("taskId");
   if (!isId(taskId)) return { error: "Tarefa não encontrada." };
   const task = await getTaskForUser(taskId, me);
   if (!task) return { error: "Tarefa não encontrada." };
@@ -96,8 +97,9 @@ export async function addTaskNote(taskId: string, _state: NoteState, formData: F
   return { savedAt: Date.now() };
 }
 
-export async function updateTask(id: string, _state: TaskFormState, formData: FormData): Promise<TaskFormState> {
+export async function updateTask(_state: TaskFormState, formData: FormData): Promise<TaskFormState> {
   const me = await requireGestor();
+  const id = formData.get("id");
   if (!isId(id)) redirect("/tarefas");
 
   const values = readTaskForm(formData);

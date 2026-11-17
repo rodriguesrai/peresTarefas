@@ -6,7 +6,7 @@ import { resetPersonPassword, type ResetPasswordState } from "../actions";
 import { TemporaryPasswordNotice } from "./temporary-password-notice";
 
 export function ResetPasswordButton({ id, name, email }: { id: string; name: string; email: string }) {
-  const [state, action, pending] = useActionState<ResetPasswordState>(resetPersonPassword.bind(null, id), {});
+  const [state, action, pending] = useActionState<ResetPasswordState, FormData>(resetPersonPassword, {});
 
   if (state.temporaryPassword) {
     return <TemporaryPasswordNotice name={name} email={email} password={state.temporaryPassword} />;
@@ -22,6 +22,7 @@ export function ResetPasswordButton({ id, name, email }: { id: string; name: str
       }}
       className="space-y-2"
     >
+      <input type="hidden" name="id" value={id} />
       <p className="text-sm text-muted">Use quando a pessoa esquecer a senha.</p>
       <Button type="submit" variant="secondary" disabled={pending}>
         {pending ? "Gerando..." : "Gerar nova senha provisória"}

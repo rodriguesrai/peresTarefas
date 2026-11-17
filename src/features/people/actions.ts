@@ -59,12 +59,9 @@ export type UpdatePersonState = {
   saved?: boolean;
 };
 
-export async function updatePerson(
-  id: string,
-  _state: UpdatePersonState,
-  formData: FormData,
-): Promise<UpdatePersonState> {
+export async function updatePerson(_state: UpdatePersonState, formData: FormData): Promise<UpdatePersonState> {
   const me = await requireGestor();
+  const id = formData.get("id");
   if (!isId(id)) return { message: "Pessoa não encontrada." };
 
   const values = readPersonForm(formData);
@@ -106,9 +103,11 @@ export async function updatePerson(
 export type PersonActionState = { message?: string; ok?: string };
 
 // Desativar mantém o histórico de tarefas e bloqueia o login na hora.
-export async function setPersonActive(id: string, active: boolean): Promise<PersonActionState> {
+export async function setPersonActive(_state: PersonActionState, formData: FormData): Promise<PersonActionState> {
   const me = await requireGestor();
-  if (!isId(id) || typeof active !== "boolean") return { message: "Pessoa não encontrada." };
+  const id = formData.get("id");
+  const active = formData.get("active") === "1";
+  if (!isId(id)) return { message: "Pessoa não encontrada." };
   if (id === me.id && !active) return { message: "Você não pode desativar o seu próprio acesso." };
 
   const person = await prisma.user.findUnique({ where: { id }, select: { id: true } });
@@ -135,8 +134,9 @@ export async function setPersonActive(id: string, active: boolean): Promise<Pers
 export type ResetPasswordState = { message?: string; temporaryPassword?: string };
 
 // Para quem esqueceu a senha: gera uma provisória e encerra as sessões abertas.
-export async function resetPersonPassword(id: string): Promise<ResetPasswordState> {
+export async function resetPersonPassword(_state: ResetPasswordState, formData: FormData): Promise<ResetPasswordState> {
   const me = await requireGestor();
+  const id = formData.get("id");
   if (!isId(id)) return { message: "Pessoa não encontrada." };
   if (id === me.id) return { message: "Para a sua própria senha, use \"Alterar senha\" no topo da tela." };
 
