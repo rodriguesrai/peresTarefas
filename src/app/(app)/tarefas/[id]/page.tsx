@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { requireUser } from "@/features/auth/lib/dal";
+import { NoteForm } from "@/features/tasks/components/note-form";
+import { NoteList } from "@/features/tasks/components/note-list";
 import { StatusButtons } from "@/features/tasks/components/status-buttons";
-import { getTaskForUser } from "@/features/tasks/lib/queries";
+import { getTaskForUser, listTaskNotes } from "@/features/tasks/lib/queries";
 import { PRIORITY_LABEL, PRIORITY_TONE, formatDueDate, isOverdue } from "@/features/tasks/lib/task-meta";
 
 export const metadata: Metadata = { title: "Tarefa | Peres Tarefas" };
@@ -16,6 +18,7 @@ export default async function TaskPage({ params }: PageProps<"/tarefas/[id]">) {
   const { id } = await params;
   const task = await getTaskForUser(id, user);
   if (!task) notFound();
+  const notes = await listTaskNotes(task.id);
 
   const overdue = isOverdue(task);
   const backHref = user.role === "GESTOR" ? "/tarefas" : "/";
@@ -62,6 +65,12 @@ export default async function TaskPage({ params }: PageProps<"/tarefas/[id]">) {
           )}
         </div>
       </div>
+
+      <section className="space-y-4 rounded-lg border border-border bg-surface p-6">
+        <h2 className="font-medium">Observações e atualizações</h2>
+        <NoteList notes={notes} />
+        <NoteForm taskId={task.id} />
+      </section>
     </div>
   );
 }

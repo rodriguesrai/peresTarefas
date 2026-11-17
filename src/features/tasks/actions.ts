@@ -56,3 +56,28 @@ export async function changeTaskStatus(id: string, status: TaskStatus): Promise<
   revalidatePath("/");
   return {};
 }
+
+const NoteSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, { error: "Escreva a observação." })
+    .max(2000, { error: "A observação pode ter no máximo 2000 caracteres." }),
+});
+
+export type NoteState = { error?: string; savedAt?: number };
+
+// Responsável e gestores registram observações e atualizações na tarefa.
+export async function addTaskNote(taskId: string, _state: NoteState, formData: FormData): Promise<NoteState> {
+  const me = await requireUser();
+  const task = await getTaskForUser(taskId, me);
+  if (!task) return { error: "Tarefa não encontrada." };
+
+  const parsed = NoteSchema.safeParse({ content: formData.get("content") });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+
+  await prisma.taskNote.create({ data: { taskId, authorId: me.id, content: parsed.data.content } });
+
+  revalidatePath(`/tarefas/${taskId}`);
+  return { savedAt: Date.now() };
+}

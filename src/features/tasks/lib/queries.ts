@@ -86,3 +86,11 @@ export async function getTaskForUser(id: string, user: { id: string; role: "GEST
   if (user.role !== "GESTOR" && task.assigneeId !== user.id) return null;
   return task;
 }
+
+export async function listTaskNotes(taskId: string) {
+  return prisma.taskNote.findMany({
+    where: { taskId },
+    orderBy: { createdAt: "asc" },
+    include: { author: { select: { id: true, name: true } } },
+  });
+}
