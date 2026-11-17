@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireGestor, requireUser } from "@/features/auth/lib/dal";
 import type { TaskStatus } from "@/generated/prisma/enums";
 import { getTaskForUser } from "./lib/queries";
-import { STATUSES } from "./lib/task-meta";
+import { STATUSES, STATUS_LABEL } from "./lib/task-meta";
 import { TaskSchema, readTaskForm, type TaskFields, type TaskFormValues } from "./schemas";
 
 export type TaskFormState = {
@@ -46,10 +46,22 @@ export async function changeTaskStatus(id: string, status: TaskStatus): Promise<
   const task = await getTaskForUser(id, me);
   if (!task) return { message: "Tarefa não encontrada." };
 
-  await prisma.task.update({
-    where: { id },
-    data: { status, completedAt: status === "CONCLUIDA" ? new Date() : null },
-  });
+  if (task.status === status) return {};
+
+  // A mudança fica registrada no histórico de observações.
+  await prisma.$transaction([
+    prisma.task.update({
+      where: { id },
+      data: { status, completedAt: status === "CONCLUIDA" ? new Date() : null },
+    }),
+    prisma.taskNote.create({
+      data: {
+        taskId: id,
+        authorId: me.id,
+        content: `Status alterado de "${STATUS_LABEL[task.status]}" para "${STATUS_LABEL[status]}".`,
+      },
+    }),
+  ]);
 
   revalidatePath(`/tarefas/${id}`);
   revalidatePath("/tarefas");
