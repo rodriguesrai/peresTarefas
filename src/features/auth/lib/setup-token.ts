@@ -37,3 +37,12 @@ export function isValidSetupToken(candidate: unknown): boolean {
 export function deleteSetupToken() {
   fs.rmSync(SETUP_TOKEN_FILE, { force: true });
 }
+
+let linkLogged = false;
+
+// Mostra o link com o token na janela do servidor uma única vez por execução.
+export function logSetupLinkOnce(token: string) {
+  if (linkLogged) return;
+  linkLogged = true;
+  console.info(`Configuração inicial: http://localhost:${process.env.PORT ?? 3000}/configuracao-inicial?token=${token}`);
+}

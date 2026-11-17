@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SetupForm } from "@/features/auth/components/setup-form";
 import { needsInitialSetup } from "@/features/auth/lib/bootstrap";
-import { SETUP_TOKEN_FILE, ensureSetupToken, isValidSetupToken } from "@/features/auth/lib/setup-token";
+import { SETUP_TOKEN_FILE, ensureSetupToken, isValidSetupToken, logSetupLinkOnce } from "@/features/auth/lib/setup-token";
 
 export const metadata: Metadata = { title: "Configuração inicial | Peres Tarefas" };
 
@@ -13,9 +13,7 @@ export default async function InitialSetupPage({ searchParams }: PageProps<"/con
   const { token: provided } = await searchParams;
   const valid = isValidSetupToken(provided);
 
-  if (!valid) {
-    console.info(`Configuração inicial: http://localhost:${process.env.PORT ?? 3000}/configuracao-inicial?token=${token}`);
-  }
+  if (!valid) logSetupLinkOnce(token);
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
