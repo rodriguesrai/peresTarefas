@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireGestor } from "@/features/auth/lib/dal";
+import { DeleteTaskButton } from "@/features/tasks/components/delete-task-button";
 import { EditTaskForm } from "@/features/tasks/components/edit-task-form";
 import { getTaskForUser, listAssignablePeople } from "@/features/tasks/lib/queries";
 import { dueDateToInput } from "@/features/tasks/lib/task-meta";
@@ -31,6 +32,12 @@ export default async function EditTaskPage({ params }: PageProps<"/tarefas/[id]/
             dueDate: dueDateToInput(task.dueDate),
           }}
         />
+      </div>
+      <div className="rounded-lg border border-red-200 bg-surface p-4">
+        <p className="mb-2 text-sm text-muted">
+          Criou por engano? Para tarefas que perderam o sentido, prefira concluir e registrar uma observação.
+        </p>
+        <DeleteTaskButton id={task.id} />
       </div>
     </div>
   );

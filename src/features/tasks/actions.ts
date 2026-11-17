@@ -129,3 +129,11 @@ export async function updateTask(id: string, _state: TaskFormState, formData: Fo
   revalidatePath("/tarefas");
   redirect(`/tarefas/${id}`);
 }
+
+// Para tarefas criadas por engano. As observações são apagadas junto.
+export async function deleteTask(id: string) {
+  await requireGestor();
+  await prisma.task.deleteMany({ where: { id } });
+  revalidatePath("/tarefas");
+  redirect("/tarefas");
+}
