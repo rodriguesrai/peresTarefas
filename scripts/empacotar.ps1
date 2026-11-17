@@ -37,10 +37,10 @@ if (Test-Path (Join-Path $Root "public")) { Copy-Item (Join-Path $Root "public")
 New-Item -ItemType Directory -Force (Join-Path $app "prisma") | Out-Null
 Copy-Item (Join-Path $Root "prisma\migrations") (Join-Path $app "prisma\migrations") -Recurse -Force
 New-Item -ItemType Directory -Force (Join-Path $app "scripts") | Out-Null
-foreach ($file in "iniciar.ps1", "migrar.mjs", "backup.mjs") {
+foreach ($file in "iniciar.ps1", "migrar.mjs", "backup.mjs", "recuperar-acesso.mjs") {
   Copy-Item (Join-Path $PSScriptRoot $file) (Join-Path $app "scripts\$file")
 }
-foreach ($file in "Iniciar Peres Tarefas.bat", "Fazer backup.bat", "COMO USAR.txt") {
+foreach ($file in "Iniciar Peres Tarefas.bat", "Fazer backup.bat", "Recuperar acesso.bat", "COMO USAR.txt") {
   Copy-Item (Join-Path $Root $file) (Join-Path $out $file)
 }
 

@@ -4,6 +4,7 @@
 param(
   [string]$Root,
   [switch]$Backup,
+  [switch]$Recuperar,
   [int]$Port = 0
 )
 
@@ -163,6 +164,19 @@ if ($Backup) {
   Write-Step "Fazendo backup do banco de dados..."
   & $node (Join-Path $ScriptsDir "backup.mjs")
   if ($LASTEXITCODE -ne 0) { Stop-WithError "Não foi possível fazer o backup." }
+  Read-Host "Pressione Enter para fechar"
+  exit 0
+}
+
+if ($Recuperar) {
+  Write-Step "Recuperar acesso"
+  & $node (Join-Path $ScriptsDir "recuperar-acesso.mjs")
+  Write-Host ""
+  $email = Read-Host "Digite o e-mail da pessoa (ou só Enter para sair)"
+  if ($email) {
+    & $node (Join-Path $ScriptsDir "recuperar-acesso.mjs") $email
+    if ($LASTEXITCODE -ne 0) { Stop-WithError "Não foi possível gerar a nova senha." }
+  }
   Read-Host "Pressione Enter para fechar"
   exit 0
 }

@@ -28,7 +28,13 @@
    Recomendado: uma vez por semana, copie a pasta "backups" para um pendrive
    ou para a nuvem.
 
-6. PARA DESLIGAR
+6. ESQUECEU A SENHA?
+   Se outra pessoa for gestora: ela entra em "Pessoas", abre o seu nome e
+   clica em "Gerar nova senha provisória".
+   Se for o único gestor: neste computador, dê dois cliques em
+   "Recuperar acesso", digite o seu e-mail e use a senha que aparecer.
+
+7. PARA DESLIGAR
    Feche a janela preta.
 
 IMPORTANTE: não apague a pasta "dados". É nela que ficam todas as tarefas.
