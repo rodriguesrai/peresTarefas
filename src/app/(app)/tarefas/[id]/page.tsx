@@ -32,9 +32,17 @@ export default async function TaskPage({ params }: PageProps<"/tarefas/[id]">) {
       <div className="space-y-4 rounded-lg border border-border bg-surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h1 className="text-xl font-semibold">{task.title}</h1>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Badge tone={PRIORITY_TONE[task.priority]}>{PRIORITY_LABEL[task.priority]}</Badge>
             {overdue && <Badge tone="danger">Atrasada</Badge>}
+            {user.role === "GESTOR" && (
+              <Link
+                href={`/tarefas/${task.id}/editar`}
+                className="ml-2 inline-flex h-8 items-center rounded-md border border-border px-3 text-sm hover:bg-background"
+              >
+                Editar
+              </Link>
+            )}
           </div>
         </div>
 

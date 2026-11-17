@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireGestor, requireUser } from "@/features/auth/lib/dal";
 import type { TaskStatus } from "@/generated/prisma/enums";
 import { getTaskForUser } from "./lib/queries";
-import { STATUSES, STATUS_LABEL } from "./lib/task-meta";
+import { STATUSES, STATUS_LABEL, formatDueDate } from "./lib/task-meta";
 import { TaskSchema, readTaskForm, type TaskFields, type TaskFormValues } from "./schemas";
 
 export type TaskFormState = {
@@ -92,4 +92,40 @@ export async function addTaskNote(taskId: string, _state: NoteState, formData: F
 
   revalidatePath(`/tarefas/${taskId}`);
   return { savedAt: Date.now() };
+}
+
+export async function updateTask(id: string, _state: TaskFormState, formData: FormData): Promise<TaskFormState> {
+  const me = await requireGestor();
+
+  const values = readTaskForm(formData);
+  const parsed = TaskSchema.safeParse(values);
+  if (!parsed.success) return { errors: z.flattenError(parsed.error).fieldErrors, values };
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: { assignee: { select: { id: true, name: true } } },
+  });
+  if (!task) redirect("/tarefas");
+
+  if (parsed.data.assigneeId !== task.assigneeId && !(await isActivePerson(parsed.data.assigneeId))) {
+    return { errors: { assigneeId: ["Escolha uma pessoa ativa."] }, values };
+  }
+
+  // Troca de responsável e de prazo ficam no histórico.
+  const changes: string[] = [];
+  if (parsed.data.assigneeId !== task.assigneeId) {
+    const next = await prisma.user.findUniqueOrThrow({ where: { id: parsed.data.assigneeId }, select: { name: true } });
+    changes.push(`Responsável alterado de ${task.assignee.name} para ${next.name}.`);
+  }
+  if ((parsed.data.dueDate?.getTime() ?? null) !== (task.dueDate?.getTime() ?? null)) {
+    changes.push(`Prazo alterado de ${formatDueDate(task.dueDate)} para ${formatDueDate(parsed.data.dueDate)}.`);
+  }
+
+  await prisma.$transaction([
+    prisma.task.update({ where: { id }, data: parsed.data }),
+    ...changes.map((content) => prisma.taskNote.create({ data: { taskId: id, authorId: me.id, content } })),
+  ]);
+
+  revalidatePath("/tarefas");
+  redirect(`/tarefas/${id}`);
 }
