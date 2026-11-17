@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { prisma } from "@/lib/prisma";
+import { isId } from "@/lib/validate";
 import { requireGestor, requireUser } from "@/features/auth/lib/dal";
 import type { TaskStatus } from "@/generated/prisma/enums";
 import { getTaskForUser } from "./lib/queries";
@@ -41,7 +42,7 @@ export type StatusState = { message?: string };
 // Responsável e gestores podem mudar o status.
 export async function changeTaskStatus(id: string, status: TaskStatus): Promise<StatusState> {
   const me = await requireUser();
-  if (!STATUSES.includes(status)) return { message: "Status inválido." };
+  if (!isId(id) || !STATUSES.includes(status)) return { message: "Status inválido." };
 
   const task = await getTaskForUser(id, me);
   if (!task) return { message: "Tarefa não encontrada." };
@@ -82,6 +83,7 @@ export type NoteState = { error?: string; savedAt?: number };
 // Responsável e gestores registram observações e atualizações na tarefa.
 export async function addTaskNote(taskId: string, _state: NoteState, formData: FormData): Promise<NoteState> {
   const me = await requireUser();
+  if (!isId(taskId)) return { error: "Tarefa não encontrada." };
   const task = await getTaskForUser(taskId, me);
   if (!task) return { error: "Tarefa não encontrada." };
 
@@ -96,6 +98,7 @@ export async function addTaskNote(taskId: string, _state: NoteState, formData: F
 
 export async function updateTask(id: string, _state: TaskFormState, formData: FormData): Promise<TaskFormState> {
   const me = await requireGestor();
+  if (!isId(id)) redirect("/tarefas");
 
   const values = readTaskForm(formData);
   const parsed = TaskSchema.safeParse(values);
@@ -133,7 +136,7 @@ export async function updateTask(id: string, _state: TaskFormState, formData: Fo
 // Para tarefas criadas por engano. As observações são apagadas junto.
 export async function deleteTask(id: string) {
   await requireGestor();
-  await prisma.task.deleteMany({ where: { id } });
+  if (isId(id)) await prisma.task.delete({ where: { id } }).catch(() => null);
   revalidatePath("/tarefas");
   redirect("/tarefas");
 }
