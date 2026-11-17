@@ -118,11 +118,13 @@ function Initialize-Source([string]$NodeExe) {
 }
 
 # ---------------------------------------------------------------- Rede
+# Só placas conectadas à rede de verdade (com gateway); ignora adaptadores virtuais.
 function Get-LanAddresses {
   try {
-    Get-NetIPAddress -AddressFamily IPv4 -ErrorAction Stop |
-      Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" -and $_.PrefixOrigin -ne "WellKnown" } |
-      Select-Object -ExpandProperty IPAddress
+    Get-NetIPConfiguration -ErrorAction Stop |
+      Where-Object { $_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq "Up" } |
+      ForEach-Object { $_.IPv4Address.IPAddress } |
+      Where-Object { $_ -and $_ -notlike "169.254.*" }
   } catch { @() }
 }
 
