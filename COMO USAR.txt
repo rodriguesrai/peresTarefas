@@ -1,0 +1,34 @@
+﻿PERES TAREFAS - COMO USAR
+=========================
+
+1. PARA ABRIR O SISTEMA
+   Dê dois cliques em "Iniciar Peres Tarefas".
+   Uma janela preta vai abrir e, em seguida, o navegador.
+   NÃO FECHE a janela preta enquanto estiver usando o sistema.
+   Depois da primeira vez, use o atalho "Peres Tarefas" da área de trabalho.
+
+2. NA PRIMEIRA VEZ
+   O navegador abre a tela "Bem-vindo ao Peres Tarefas".
+   Cadastre o seu nome, e-mail e uma senha. Você será o gestor do sistema.
+   Se o Windows perguntar sobre o firewall, clique em "Permitir acesso".
+   Isso deixa os outros computadores do escritório usarem o sistema.
+
+3. CADASTRAR A EQUIPE
+   Entre em "Pessoas" > "Nova pessoa".
+   O sistema mostra uma senha provisória: passe para a pessoa.
+   No primeiro acesso ela cria a própria senha.
+
+4. ACESSAR DE OUTROS COMPUTADORES
+   A janela preta mostra um endereço como http://192.168.0.10:3000
+   Digite esse endereço no navegador dos outros computadores do escritório.
+   O computador onde o sistema está precisa ficar ligado e com a janela aberta.
+
+5. BACKUP (CÓPIA DE SEGURANÇA)
+   Dê dois cliques em "Fazer backup". A cópia vai para a pasta "backups".
+   Recomendado: uma vez por semana, copie a pasta "backups" para um pendrive
+   ou para a nuvem.
+
+6. PARA DESLIGAR
+   Feche a janela preta.
+
+IMPORTANTE: não apague a pasta "dados". É nela que ficam todas as tarefas.
