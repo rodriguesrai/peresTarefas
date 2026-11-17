@@ -10,6 +10,8 @@
     "postinstall": "prisma generate",
     "db:migrar": "node scripts/migrar.mjs",
     "backup": "node scripts/backup.mjs",
+    "exemplo": "node scripts/dados-exemplo.mjs",
+    "exemplo:abrir": "node scripts/abrir-exemplo.mjs",
     "empacotar": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/empacotar.ps1"
   },
   "dependencies": {

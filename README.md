@@ -175,6 +175,28 @@ Na primeira vez, o terminal mostra o link da configuração inicial, com o token
 
 Também é possível rodar pelo **`Iniciar Peres Tarefas.bat`** na raiz do repositório. Se não houver Node instalado, ele baixa um Node portátil e faz a instalação e o build sozinho.
 
+### Dados de exemplo (para apresentação e prints)
+
+```bash
+npm run exemplo         # cria dados-exemplo/ com equipe fictícia e 19 tarefas
+npm run exemplo:abrir   # abre o sistema com esses dados em http://localhost:3010
+```
+
+Os dados ficam em uma pasta separada, `dados-exemplo/`. O banco real em `dados/` nunca é tocado. As datas são calculadas a partir do dia em que o comando roda, então sempre há tarefas atrasadas, vencendo hoje, nos próximos dias e concluídas na semana.
+
+Todos entram com a senha **`demo1234`**:
+
+| E-mail | Pessoa | Perfil |
+|---|---|---|
+| `helena@exemplo.local` | Helena Duarte, sócia | Gestor |
+| `marcos@exemplo.local` | Marcos Lima, advogado | Gestor |
+| `juliana@exemplo.local` | Juliana Rocha, advogada | Colaborador |
+| `pedro@exemplo.local` | Pedro Alves, estagiário | Colaborador |
+| `camila@exemplo.local` | Camila Souza, secretária | Colaborador |
+| `rafael@exemplo.local` | Rafael Nunes, ex-estagiário | Colaborador (inativo) |
+
+Para recriar com as datas atualizadas, apague a pasta `dados-exemplo/` e rode `npm run exemplo` de novo.
+
 ### Scripts
 
 | Comando | O que faz |
